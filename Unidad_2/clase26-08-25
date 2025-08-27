@@ -1,0 +1,8 @@
+Librerias:
+numpy 1.26.4
+opencv 4.9.080
+matplotlib 3.2.5
+tensorflow 2.16.2
+keras 3.11.3
+
+Buscar la imagen que mejor se ajuste
