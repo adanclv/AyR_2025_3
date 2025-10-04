@@ -1,0 +1,11 @@
+Archivos/Clases-individuos/
+Archivos/Clases-individuos-old/
+Archivos/Images/
+modelo/
+model/
+sounds/
+*.xml
+*.keras
+*.h5
+*.mp3
+*.wav

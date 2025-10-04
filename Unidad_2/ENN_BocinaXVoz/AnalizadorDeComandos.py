@@ -1,20 +1,3 @@
-DICCIONARIO = {
-    "accion_estado": ["encender", "apagar", "prende", "apaga"],
-    "accion_ajuste": ["sube", "baja", "aumenta", "disminuye"],
-    "accion_play": ["reproducir", "pausar", "reproduce", "pausa", "siguiente", "anterior"],
-    "accion_mute": ["silenciar", "silencia", "silencio"],
-    "objeto_dispositivo": ["bocina", "altavoz"],
-    "objeto_magnitud": ["volumen", "cancion", "sonido", "audio"],
-    "valor": ["maximo", "diez", "veinte", "cincuenta", "mitad"]
-}
-
-REGLAS = {
-    "accion_estado": ["objeto_dispositivo"],
-    "accion_ajuste": ["objeto_magnitud", "valor"],
-    "accion_play": ["objeto_magnitud"],
-    "accion_mute": ["objeto_dispositivo"],
-}
-
 class AnalizadorDeComandos:
     def __init__(self, diccionario_, reglas_):
         self.diccionario = diccionario_
@@ -29,6 +12,7 @@ class AnalizadorDeComandos:
             for key, values in self.diccionario.items():
                 for command in commands_normalizados:
                     if command in values:
+                        # Guardamos la categoría (key) y la palabra real (command)
                         self.lex[key] = command
 
             self.accion_key = None
@@ -44,26 +28,28 @@ class AnalizadorDeComandos:
                     self.valor_key = key
 
     def _validacion(self, frase):
+        # Verifica la coherencia entre Acción, Objeto y Valor
+
         if not self.accion_key or not self.objeto_key:
             return False, f"Faltan la Acción en la frase: '{frase}'"
 
         roles_compatibles = self.reglas[self.accion_key]
 
+        # Si el objeto no es el esperado de acuerdo con la acción
         if self.objeto_key not in roles_compatibles:
             return False, (f"La Acción '{self.lex[self.accion_key]}' ({self.accion_key}) no es compatible "
                            f"con el Objeto '{self.lex[self.objeto_key]}' ({self.objeto_key}).")
 
-        if "valor" in roles_compatibles and not self.valor_key:
-            return False, "hola"
-
-        return True, "ANÁLISIS SEMÁNTICO VÁLIDO."
+        return True, "FRASE VÁLIDA."
 
     def analizar(self, frase):
         commands = frase.split(" ")
         commands_minus = [c.lower() for c in commands]
 
+        # Paso 1: Análisis Léxico y Extracción de Roles
         self._analisis_lexico(commands_minus)
 
+        # Paso 2: Validación Semántica
         valido, mensaje = self._validacion(frase)
 
         print("-" * 40)
@@ -80,14 +66,14 @@ class AnalizadorDeComandos:
             valor = self.lex.get(self.valor_key)
 
             print(f"Acción: {accion.upper()}, Objeto: '{objeto.upper()}'", end="")
-            if valor: print(f", Valor: {valor.upper()}")
+            if valor:
+                print(f", Valor: {valor.upper()}")
+            else: print("")
         else:
             print(f"ERROR: {mensaje}")
 
-analizador = AnalizadorDeComandos(DICCIONARIO, REGLAS)
+if __name__ == '__main__':
+    from config import DICCIONARIO, REGLAS
+    analizador = AnalizadorDeComandos(DICCIONARIO, REGLAS)
 
-analizador.analizar("Siguiente cancion")
-
-analizador.analizar("Enciende el volumen")
-
-analizador.analizar("Sube volumen maximo")
+    analizador.analizar("Sube el volumen ")
