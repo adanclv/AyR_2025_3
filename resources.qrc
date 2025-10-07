@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="svgs">
+    <file>Archivos/Images/placeholder.svg</file>
+    <file>Archivos/Images/camera-svg.svg</file>
+  </qresource>
+</RCC>

@@ -14,6 +14,7 @@ pesos = '../E04_CNN/modelo/pesos.weights.h5'
 
 cnn = load_model(modelo)
 cnn.load_weights(pesos)
+UMBRAL = 0.85
 
 def predict(file):
     imagen_a_predecir = load_img(file, target_size = (alto, largo), color_mode="grayscale")
@@ -23,19 +24,25 @@ def predict(file):
     arreglo = cnn.predict(imagen_a_predecir) ## [[1,0,0,0,0,0]]
     resultado = arreglo[0]
     #print(resultado)
+
+    probabilidad_maxima = np.max(arreglo[0])
+
     respuesta = np.argmax(resultado) #indice del valor mas alto
 
-    match respuesta:
-        case 0:
-            return 'C1-Adan'
-        case 1:
-            return 'C2-Poncho'
-        case 2:
-            return 'C3-Pavel'
-        case 3:
-            return 'C4-Cristobal'
-        case _:
-            return '----'
+    if probabilidad_maxima >= UMBRAL:
+        match respuesta:
+            case 0:
+                return 'C1-Adan'
+            case 1:
+                return 'C2-Poncho'
+            case 2:
+                return 'C3-Pavel'
+            case 3:
+                return 'C4-Cristobal'
+            case _:
+                return '----'
+    else:
+        print("Desconocido")
 
 #predict('/Users/alejandrohumbertogarciaruiz/Desktop/introTensorFlow/F3-Prueba/2-cisne/cisne_31.jpg')
 
@@ -80,5 +87,6 @@ def probar_red_neuronal():
 #predicho = predict("../E04_CNN/F3-Prueba/C2-Poncho/Alfonso_foto_10.png")
 #predicho = predict("../E04_CNN/F3-Prueba/C4-Cristobal/cristobal_foto_50.png")
 #predicho = predict("../E04_CNN/F3-Prueba/C3-Pavel/Pavel_foto_2.png")
-predicho = predict("../../Archivos/Images/adan-wap1.png")
+#predicho = predict("../../Archivos/Images/poncho1.png")
+predicho = predict("../../Archivos/Images/persona1.jpg")
 print(predicho)

@@ -1,0 +1,58 @@
+class program {
+
+    void turnRight() {
+        iterate(3) { turnleft(); }
+    }
+
+    void pickBeepers(n) {
+        if(iszero(n)) {
+            if(nextToABeeper) {
+                iterate(3) { putbeeper(); }
+            }
+        } else {
+            if(nextToABeeper) {
+              pickbeeper();
+              pickBeepers(pred(n));
+            } else if(iszero(pred(n))){
+                    iterate(2) { putbeeper(); }
+            } else if(iszero(pred(pred(n)))) {
+                putbeeper();
+            }
+        }
+    }
+
+    void go() {
+        while(frontIsClear) {
+            pickBeepers(3);
+
+            move();
+        }
+    }
+
+    void retorno(a) {
+        pickBeepers(3);
+        if(iszero(a)) {
+            turnRight();
+            move();
+            turnRight();
+        } else {
+            turnleft();
+            if(frontIsClear) {
+                move();
+            }
+            turnleft();
+        }
+
+    }
+
+    program() {
+        iterate(5) {
+            go();
+            retorno(0);
+            go();
+            retorno(1);
+        }
+
+        turnoff();
+    }
+}
