@@ -1,93 +1,76 @@
-DICCIONARIO = {
-    "accion_estado": ["encender", "apagar", "prende", "apaga"],
-    "accion_ajuste": ["sube", "baja", "aumenta", "disminuye"],
-    "accion_play": ["reproducir", "pausar", "reproduce", "pausa", "siguiente", "anterior"],
-    "accion_mute": ["silenciar", "silencia", "silencio"],
-    "objeto_dispositivo": ["bocina", "altavoz"],
-    "objeto_magnitud": ["volumen", "cancion", "sonido", "audio"],
-    "valor": ["maximo", "diez", "veinte", "cincuenta", "mitad"]
-}
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtGui import QPainter, QColor, QFont
+from PyQt5.QtCore import Qt
 
-REGLAS = {
-    "accion_estado": ["objeto_dispositivo"],
-    "accion_ajuste": ["objeto_magnitud", "valor"],
-    "accion_play": ["objeto_magnitud"],
-    "accion_mute": ["objeto_dispositivo"],
-}
+class Ventana(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Árbol de caminos")
+        self.resize(1000, 600)
+        self.show()
 
-class AnalizadorDeComandos:
-    def __init__(self, diccionario_, reglas_):
-        self.diccionario = diccionario_
-        self.reglas = reglas_
-        self.lex = {}
-        self.accion_key = None
-        self.objeto_key = None
-        self.valor_key = None
+        # Definir el árbol como lista de niveles
+        # Cada nivel es una lista de nodos (solo para posicionamiento)
+        self.niveles = [
+            [0],        # Nivel 0: nodo central
+            [0, 1],     # Nivel 1: dos nodos
+            [0],
+            [0, 1, 2, 3, 4],  # Nivel 3: cinco nodos
+            [0],
+            [0, 1],     # Nivel 5: dos nodos
+            [0],         # Nivel 6: nodo central
+            [0, 1],  # Nivel 5: dos nodos
+            [0],  # Nivel 6: nodo central
+            [0, 1],  # Nivel 5: dos nodos
+            [0],  # Nivel 6: nodo central
+            [0, 1],  # Nivel 5: dos nodos
+            [0],  # Nivel 6: nodo central
+        ]
 
-    def _analisis_lexico(self, commands_normalizados):
-            self.lex = {}
-            for key, values in self.diccionario.items():
-                for command in commands_normalizados:
-                    if command in values:
-                        self.lex[key] = command
+        # Conexiones: lista de tuplas (nivel_actual, indice_nodo_actual, nivel_siguiente, indice_nodo_siguiente)
+        self.conexiones = [
+            (0,0,1,0),(0,0,1,1),
+            (1,0,2,0),(1,1,2,0),
+            (2,0,3,0),(2,0,3,1), (2,0,3,2), (2,0,3,3), (2,0,3,4),
+            (3,0, 4, 0), (3, 1, 4, 0), (3, 2, 4, 0), (3, 3, 4, 0), (3, 4, 4, 0),
+            (4,0,5,0), (4,0,5,1),
+            (5,0,6,0), (5,1,6,0)
+        ]
 
-            self.accion_key = None
-            self.objeto_key = None
-            self.valor_key = None
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setFont(QFont('Arial', 12))
 
-            for key in self.lex.keys():
-                if key.startswith("accion_"):
-                    self.accion_key = key
-                elif key.startswith("objeto_"):
-                    self.objeto_key = key
-                elif key == "valor":
-                    self.valor_key = key
+        # Calcular posiciones de nodos
+        self.posiciones = []
+        ancho = self.width()
+        alto_total = self.height()
+        niveles_totales = len(self.niveles)
+        for nivel_index, nivel in enumerate(self.niveles):
+            x = 20 + nivel_index * (ancho // (niveles_totales+1))
+            n_nodos = len(nivel)
+            fila = []
+            for i, _ in enumerate(nivel):
+                y = (i+1) * (alto_total // (n_nodos+1))
+                fila.append((x, y))
+            self.posiciones.append(fila)
 
-    def _validacion(self, frase):
-        if not self.accion_key or not self.objeto_key:
-            return False, f"Faltan la Acción en la frase: '{frase}'"
+        # Dibujar conexiones
+        painter.setPen(QColor(150, 0, 0))
+        for con in self.conexiones:
+            n1, i1, n2, i2 = con
+            x1, y1 = self.posiciones[n1][i1]
+            x2, y2 = self.posiciones[n2][i2]
+            painter.drawLine(x1, y1, x2, y2)
 
-        roles_compatibles = self.reglas[self.accion_key]
+        # Dibujar nodos
+        for nivel in self.posiciones:
+            for x, y in nivel:
+                painter.setBrush(QColor(100,200,250))
+                painter.drawEllipse(x-20, y-20, 40, 40)
 
-        if self.objeto_key not in roles_compatibles:
-            return False, (f"La Acción '{self.lex[self.accion_key]}' ({self.accion_key}) no es compatible "
-                           f"con el Objeto '{self.lex[self.objeto_key]}' ({self.objeto_key}).")
-
-        if "valor" in roles_compatibles and not self.valor_key:
-            return False, "hola"
-
-        return True, "ANÁLISIS SEMÁNTICO VÁLIDO."
-
-    def analizar(self, frase):
-        commands = frase.split(" ")
-        commands_minus = [c.lower() for c in commands]
-
-        self._analisis_lexico(commands_minus)
-
-        valido, mensaje = self._validacion(frase)
-
-        print("-" * 40)
-        print(f"FRASE ANALIZADA: '{frase}'")
-        print(f"Roles Léxicos Encontrados: {self.lex}")
-        print("-" * 40)
-
-        if valido:
-            print(f"{mensaje}")
-
-            # Generación de la acción ejecutable
-            accion = self.lex.get(self.accion_key)
-            objeto = self.lex.get(self.objeto_key)
-            valor = self.lex.get(self.valor_key)
-
-            print(f"Acción: {accion.upper()}, Objeto: '{objeto.upper()}'", end="")
-            if valor: print(f", Valor: {valor.upper()}")
-        else:
-            print(f"ERROR: {mensaje}")
-
-analizador = AnalizadorDeComandos(DICCIONARIO, REGLAS)
-
-analizador.analizar("Siguiente cancion")
-
-analizador.analizar("Enciende el volumen")
-
-analizador.analizar("Sube volumen maximo")
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    ventana = Ventana()
+    sys.exit(app.exec_())

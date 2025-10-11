@@ -1,4 +1,3 @@
-from PyQt5 import uic, QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import QThread, pyqtSignal
 import numpy as np
 import cv2
@@ -6,7 +5,7 @@ from keras.models import load_model
 from keras.utils import load_img, img_to_array
 import time
 
-UMBRAL = 0.85
+UMBRAL = 0.7
 
 class CameraThread(QThread):
     Prediction = pyqtSignal(np.ndarray, tuple)
@@ -31,6 +30,11 @@ class CameraThread(QThread):
     def run(self):
         cam = cv2.VideoCapture(0)
 
+        PREDICT_INTERVAL = 0.7  # s
+        last_prediction_time = time.time()
+
+        predict = (False, "✖️ Esperando primera predicción...")
+
         while self.running:
             ret, frame = cam.read()
 
@@ -39,9 +43,10 @@ class CameraThread(QThread):
 
             frame = cv2.flip(frame, 1)
             rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            predict = self.predict_face(frame)
+            if time.time() - last_prediction_time >= PREDICT_INTERVAL:
+                last_prediction_time = time.time()
+                predict = self.predict_face(frame)
             self.Prediction.emit(rgbImage, predict)
-            time.sleep(0.02) # TODO millis
 
         cam.release()
 
@@ -84,7 +89,7 @@ class CameraThread(QThread):
                     case 3:
                         return (True, resultado + "Cristobal")
                     case _:
-                        return '----'
+                        return (False, "✖️ Persona NO reconocida: idx inválido")
             else:
                 return (False, "✖️ Persona NO reconocida: Desconocido")
         else: return (False, "✖️ No se detecta rostro")
